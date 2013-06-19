@@ -8,6 +8,12 @@
 
 (load "match")
 
+;; Do not print style-warning errors.
+(declaim #+sbcl(sb-ext:muffle-conditions style-warning))
+
+
+(in-package :match)
+
 (match:defpattern list (&rest arglist) 
   (expr)
     (and (listp expr) 
@@ -57,3 +63,6 @@
     (arglist num (/ (nth num (cdr expr)) 2)))
 
 
+
+;; Resume printing style-warning errors.
+(declaim #+sbcl(sb-ext:unmuffle-conditions style-warning))

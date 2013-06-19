@@ -6,17 +6,17 @@
 ;;;; Tests for the pattern matching library.
 ;;;; 
 
-;; Do not print style-warning errors.
-(declaim #+sbcl(sb-ext:muffle-conditions style-warning))
-
-
 (load "patterns")
 
 ;; TODO: put unit.lisp in same directory
 (load "../unit")
 
-(import 'match)
-(import 'unit)
+(in-package :match)
+
+
+;; Do not print style-warning errors.
+(declaim #+sbcl(sb-ext:muffle-conditions style-warning))
+
 
 ;;; Functions demonstrating pattern matching.
 (defmatch factorial
@@ -46,13 +46,17 @@
   (n (cons x xs) (cons x (take (1- n) xs))))
 
 (defun unit-test ()
-  (check 
-    verbose-off
+  (unit:check 
+    unit:verbose-off
     
     "Test proper compile-time error handling"
+    ;; TODO: this doesn't work properly because when it evaluates,
+    ;; it's not in the match package
     (equal
      (handler-case 
-	 (eval '(defpattern something (x) (wrong number special args) ()))
+    	 (eval '(progn
+		 (in-package :match)
+		 (defpattern something (x) (wrong number special args) ())))
        (defpattern-wrong-number-special-args (err) "error found"))
      "error found")
 
@@ -218,7 +222,7 @@
 (defun unit-test-safe ()
   "Calls (unit-test) and catches exceptions."
   (handler-case (unit-test) 
-    (match-error (se)
+    (:match-error (se)
       (format t "~a: ~a" se (slot-value se 'text)))))
 
 (defun benchmark ()

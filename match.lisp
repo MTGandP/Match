@@ -12,12 +12,14 @@
 
 (defpackage :match
   (:use :common-lisp)
-  (:export :matchp
+  (:export :defmatch
+	   :defpattern
 	   :match
-	   :patternp
-	   :defpattern))
+	   :matchp
+	   :patternp))
 
 (in-package :match)
+
 
 (defmacro define-match-error (name)
   "A basic macro for quickly defining new match errors."
@@ -56,13 +58,20 @@
    (matchp-test :initarg :matchp-test)
    (value-getter :initarg :value-getter)))
 
-(defparameter *patterns* (make-hash-table)
-  "The keys are symbols representing the names of patterns and the
-  values are objects of type Pattern.")
+(let ((patterns (make-hash-table)))
+  (defun patternp (name)
+    "Determines if the given symbol defines a pattern."
+    (gethash name patterns))
 
-(defun patternp (name)
-  "Determines if the given symbol defines a pattern."
-  (gethash name *patterns*))
+  (defun get-pattern (name)
+    "Returns the pattern with the given name."
+    (gethash name patterns))
+
+  (defun set-pattern (name value)
+    "Sets the pattern with the given name to the given value. If the
+    name is not bound, creates a new pattern with the given name and
+    binds it to the given value."
+    (setf (gethash name patterns) value)))
 
 ;; TODO: Some parts of this have not been tested.
 (defun basic-match-p (expr form)
@@ -89,7 +98,7 @@ basic built-in patterns and NOT user-defined patterns."
   "Determines whether the expression matches the form."
   (cond
     ((and (consp form) (symbolp (car form)))
-     (let ((pattern (gethash (car form) *patterns*)))
+     (let ((pattern (get-pattern (car form))))
        (and 
 	;; Match the outermost form
 	(if pattern
@@ -164,7 +173,7 @@ argument, and second an expression that uses the  passed in to
       (format nil
         "Wrong number of special arguments (~a found, ~a expected)"
 	(length special-args) expected-special-args))
-    `(setf (gethash ',name ,*patterns*)
+    `(set-pattern ',name
      (make-instance 'Pattern 
       :num-args 
       ,(arglist-count-args args)
@@ -235,7 +244,7 @@ returns nil. Notice that this behavior is useful for some cases, but
 it means that the function will quietly ignore invalid input."
   (cond
     ((and (consp expr) (consp form))
-     (let ((pattern (gethash (car form) *patterns*))
+     (let ((pattern (get-pattern (car form)))
 	   (num (car path)))
        (when (not pattern)
 	 (error 'undefined-pattern :text
