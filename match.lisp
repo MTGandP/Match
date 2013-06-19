@@ -325,3 +325,6 @@ arguments, similarly to Haskell or other functional languages."
 
 ;; Resume printing style-warning errors.
 (declaim #+sbcl(sb-ext:unmuffle-conditions style-warning))
+
+;; Load the default patterns.
+(load "patterns")

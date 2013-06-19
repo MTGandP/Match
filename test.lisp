@@ -6,10 +6,8 @@
 ;;;; Tests for the pattern matching library.
 ;;;; 
 
-(load "patterns")
-
-;; TODO: put unit.lisp in same directory
-(load "../unit")
+(load "match")
+(load "unit")
 
 (in-package :match)
 
@@ -34,16 +32,6 @@
   (0 n (1+ n))
   (m 0 (ackermann (1- m) 1))
   (m n (ackermann (1- m) (ackermann m (1- n)))))
-
-(defmatch drop
-  (n nil nil)
-  (0 xs xs)
-  (n (cons x xs) (drop (1- n) xs)))
-
-(defmatch take
-  (n nil nil)
-  (0 xs nil)
-  (n (cons x xs) (cons x (take (1- n) xs))))
 
 (defun unit-test ()
   (unit:check 
@@ -188,41 +176,12 @@
     (equal (ackermann 3 3)
 	   61)
 
-    "Test drop function"
-    (equal (drop 0 nil)
-	   nil)
-    (equal (drop 0 '(1 2 3))
-	   '(1 2 3))
-    (equal (drop 4 nil)
-	   nil)
-    (equal (drop 1 '(1 2 3))
-	   '(2 3))
-    (equal (drop 2 '(1 2 3))
-	   '(3))
-    (equal (drop 3 '(1 2 3))
-	   nil)
-    (equal (drop 4 '(1 2 3))
-	   nil)
-
-    "Test take function"
-    (equal (take 0 nil)
-	   nil)
-    (equal (take 0 '(1 2 3))
-	   nil)
-    (equal (take 1 '(1 2 3))
-	   '(1))
-    (equal (take 2 '(1 2 3))
-	   '(1 2))
-    (equal (take 3 '(1 2 3))
-	   '(1 2 3))
-    (equal (take 4 '(1 2 3))
-	   '(1 2 3))
     ))
 
 (defun unit-test-safe ()
   "Calls (unit-test) and catches exceptions."
   (handler-case (unit-test) 
-    (:match-error (se)
+    (match-error (se)
       (format t "~a: ~a" se (slot-value se 'text)))))
 
 (defun benchmark ()
@@ -231,6 +190,9 @@
   (ackermann 3 7)
   (ackermann 3 9))
 
+(export 'unit-test)
+(export 'unit-test-safe)
+(export 'benchmark)
 
 
 ;; Resume printing style-warning errors.

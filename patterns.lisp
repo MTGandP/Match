@@ -6,13 +6,10 @@
 ;;;; Default patterns for use with the pattern matching library.
 ;;;; 
 
-(load "match")
 
 ;; Do not print style-warning errors.
 (declaim #+sbcl(sb-ext:muffle-conditions style-warning))
 
-
-(in-package :match)
 
 (match:defpattern list (&rest arglist) 
   (expr)
