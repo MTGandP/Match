@@ -16,7 +16,8 @@
 	   :defpattern
 	   :match
 	   :matchp
-	   :patternp))
+	   :patternp
+	   :quoted-matchp))
 
 (in-package :match)
 
@@ -55,6 +56,7 @@
 
 (defclass Pattern ()
   ((num-args :initarg :num-args)
+   (doc-string :initarg :doc-string)
    (matchp-test :initarg :matchp-test)
    (value-getter :initarg :value-getter)))
 
@@ -73,8 +75,7 @@
     binds it to the given value."
     (setf (gethash name patterns) value)))
 
-;; TODO: Some parts of this have not been tested.
-(defun basic-match-p (expr form)
+(defun basic-matchp (expr form)
   "Determines if the expression matches the form. Only uses certain
 basic built-in patterns and NOT user-defined patterns."
   (cond
@@ -93,9 +94,12 @@ basic built-in patterns and NOT user-defined patterns."
     ;; Everything else is matched using equal.
     (t (equal expr form))))
 
+(defun quoted-matchp (expr form)
+  "Determines whether the expression matches the form. The form must
+be quoted.
 
-(defun matchp (expr form)
-  "Determines whether the expression matches the form."
+Example
+  (quoted-matchp 3 '(type 'number))"
   (cond
     ((and (consp form) (symbolp (car form)))
      (let ((pattern (get-pattern (car form))))
@@ -111,12 +115,19 @@ basic built-in patterns and NOT user-defined patterns."
 	  (notany #'null
 	    (loop for i from 0 below (length (cdr form)) collect
 		 (handler-case
-		     (matchp 
+		     (quoted-matchp 
 		      (funcall (slot-value pattern 'value-getter)
 			       expr i)
 		      (nth i (cdr form)))
 		   (pattern-wrong-argnum (err) t))))))))
-    (t (basic-match-p expr form))))
+    (t (basic-matchp expr form))))
+
+(defmacro matchp (expr form)
+  "Determines if the expression matches the form.
+
+Example
+  (matchp 3 (type 'number))"
+  `(quoted-matchp ,expr ',form))
 
 (defun arglist-count-args (args)
   "Counts the number of parameters in the given argument
@@ -144,10 +155,8 @@ specification, not including a &rest argument."
 	(cons (- pos 1) '&rest)
 	pos)))
 
-;; TODO: if an argument's value is used, don't allow the pattern to
-;; assign it to a variable, and vice versa.
-;; TODO: Allow for a documentation string.
-(defmacro defpattern (name args special-args pred &rest binds)
+(defmacro defpattern (name args special-args 
+		      &optional doc-string pred &rest binds)
   "Defines a new pattern that can be used by matchp. Patterns do not
 exist in the same namespace as functions.
 
@@ -160,6 +169,7 @@ args: An argument specificer much like that for functions. When a
 special-args: An argument specifier containing exactly one argument,
   which binds to the expression. By convention, this is given as
   (expr).
+doc-string: An optional documentation string describing the pattern.
 pred: The body for a predicate function that uses the values passed
   in to args and special-args to determine whether the expression
   matches the pattern.
@@ -177,52 +187,72 @@ binds: A list of forms where each form specifies how to bind a
 "
   (let ((argnum-sym (gensym))
 	(expected-special-args 1))
-  (if (not (= (length special-args) expected-special-args))
-    (error 'defpattern-wrong-number-special-args
-      (format nil
-        "Wrong number of special arguments (~a found, ~a expected)"
-	(length special-args) expected-special-args))
-    `(set-pattern ',name
-     (make-instance 'Pattern 
-      :num-args 
-      ,(arglist-count-args args)
-      
-      :matchp-test
-      (lambda (,@special-args ,@args) ,pred)
+    ;; If the pattern definition does not contain a doc string,
+    ;; rearrange the arguments.
+    (when (not (stringp doc-string))
+      (if (not (and (null pred) (null binds)))
+	  (setf binds (cons pred binds)))
+      (setf pred doc-string)
+      (setf doc-string nil))
+	
+    (if (not (= (length special-args) expected-special-args))
+	(error 'defpattern-wrong-number-special-args
+	 (format nil
+		 "Wrong number of special arguments (~a found, ~a expected)"
+		 (length special-args) expected-special-args))
+	`(set-pattern ',name
+	  (make-instance 'Pattern 
+	   :num-args 
+	   ,(arglist-count-args args)
 
-      :value-getter
-      (lambda (,@special-args ,argnum-sym)
-	(cond
-	  ,@(nconc 
-	    (mapcar 
-	     (lambda (body)
-	       (let ((pos (arglist-pos (car body) args)))
-		 (cond
-		   ((consp pos)
-		    `((>= ,argnum-sym ,(car pos))
-		      (let ((,(cadr body) (- ,argnum-sym ,(car pos))))
-			,(caddr body))))
-		   ((null pos)
-		    (error 'defpattern-unknown-argument :text
-			   (format nil 
-				   "Pattern ~a has no argument ~a in argument list ~a"
-				   name (car body) args)))
-		   (t `((= ,argnum-sym ,pos) ,(cadr body))))))
-	     binds)
-	    `((t (error 'pattern-wrong-argnum :text
-			(format nil "Pattern ~a has no argument number ~a"
-				',name ,argnum-sym))))))))))))
+	   :doc-string
+	   ,doc-string
+	   
+	   :matchp-test
+	   (lambda (,@special-args ,@args) ,pred)
+
+	   :value-getter
+	   (lambda (,@special-args ,argnum-sym)
+	     (cond
+	       ,@(nconc 
+		  (mapcar 
+		   (lambda (body)
+		     (let ((pos (arglist-pos (car body) args)))
+		       (cond
+			 ((consp pos)
+			  `((>= ,argnum-sym ,(car pos))
+			    (let ((,(cadr body) (- ,argnum-sym ,(car pos))))
+			      ,(caddr body))))
+			 ((null pos)
+			  (error 'defpattern-unknown-argument :text
+				 (format nil 
+					 "Pattern ~a has no argument ~a in argument list ~a"
+					 name (car body) args)))
+			 (t `((= ,argnum-sym ,pos) ,(cadr body))))))
+		   binds)
+		  `((t (error 'pattern-wrong-argnum :text
+			      (format nil "Pattern ~a has no argument number ~a"
+				      ',name ,argnum-sym))))))))))))
 
 
-;;
-;; TODO: Make every nontrivial pattern user-defined instead of
-;; built-in. Then use this to simplify the definitions of (bind-vars)
-;; and (get-var-value). In the new (get-var-value), count the
-;; arguments until reaching the (num)th argument and return its value.
-;;
+(defun var-used-p (var to-eval)
+  "Determines if the given variable is used in the expression. This
+  isn't perfect; if you do something like 
+    (var-used-p 'x '(quote x))
+  or 
+    (var-used-p 'x (x 3)) ; x is a function
+  then it will incorrectly say that x is used.
+"
+  (cond
+    ((consp to-eval)
+     (or (var-used-p var (car to-eval))
+	 (var-used-p var (cdr to-eval))))
+    (t (equal var to-eval))))
 
-
-(defun bind-vars (expr form)
+;; TODO: Do something about unused variables. Search through the
+;; expression to see if a variable is ever referenced; if not, don't
+;; define it.
+(defun bind-vars (expr-sym to-eval form)
   "Treats symbols in form as variables. Creates a list of variables
 in form where each element is a list containing first the variable,
 then the expression in expr to which the variable is bound."
@@ -238,14 +268,14 @@ then the expression in expr to which the variable is bound."
 	   ((consp form-rec)
 	    (nconc (rec (car form-rec) 0 (cons (1- index) path))
 		   (rec (cdr form-rec) (1+ index) path)))
-	   ((and (symbolp form-rec) (not (booleanp form-rec)))
+	   ((and (symbolp form-rec) (not (booleanp form-rec))
+		 (var-used-p form-rec to-eval))
 	    (list (list form-rec 
-	      `(get-var-value ,expr ',form ',(reverse path)))))
+	      `(get-var-value ,expr-sym ',form ',(reverse path)))))
 	   (t nil))))
     (rec form 0 nil)))
 	    
 
-;; TODO: Do something about unused variables.
 (defun get-var-value (expr form path)
   "Finds the (num)th variable in form and returns its corresponding
 value in expr. If it does not understand the format of form, it
@@ -273,7 +303,7 @@ it means that the function will quietly ignore invalid input."
   "Puts the variables in form into scope and binds them to the
   corresponding values in expr. Then evaluates to-eval."
   (let* ((expr-sym (gensym))
-	 (var-list (bind-vars expr-sym form)))
+	 (var-list (bind-vars expr-sym to-eval form)))
     (if var-list
 	`(let ((,expr-sym ,expr))
 	  (let ,var-list
@@ -284,27 +314,9 @@ it means that the function will quietly ignore invalid input."
 (defun expand (val body)
   (when (consp body)
     (let ((form (first (car body))) (to-eval (second (car body))))
-      (cons `((matchp ,val ',form)
+      (cons `((matchp ,val ,form)
 	      (add-scope ,val ,form ,to-eval))
 	    (expand val (cdr body))))))
-
-(defun quote-forms (body)
-  "Recursive function to put quotes in the right places in each form
-  in body."
-  (when (consp body)
-    (cons (list `',(first (car body))
-		(second (car body)))
-	  (quote-forms (cdr body)))))
-
-;; TODO: temporarily broken
-(defmacro matchq (val &body body)
-  "A more verbose but more flexible version of (match). This version
-  will strictly evaluate predicates and bodies. For example: 
-    (match val
-      ((fun x y) ...)) ; no good--it will evaluate (fun x y)
-    (match val
-      ('(fun x y) ...)) ; this is what you want to do"
-  `(cond ,@(expand val body)))
 
 
 (defmacro match (val &body body)
@@ -321,7 +333,6 @@ If predk contained any symbols other than function
   the value in val that they matched. If you wish to use a generic
   placeholder symbol without binding it to a variable, use T."
   `(cond ,@(expand val body)))
-;  `(cond ,@(expand val (quote-forms body))))
 
 ;; TODO: allow doc strings
 (defmacro defmatch (name &body body)

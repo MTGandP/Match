@@ -60,8 +60,8 @@ list."
   (nil 0)
   ((cons x xs) (1+ (m-length xs))))
 
-;; TODO: This seems overly complicated. There must be a way to
-;; simplify it. 
+;; TODO: This seems unnecessarily complicated. There must be a way to
+;; simplify it.
 (match:defmatch m-index
   "Where the first argument is a value and the second is a list, finds
 the index of the first argument in the second argument. If it is not
@@ -73,11 +73,14 @@ found, returns nil."
 	(let ((inner (m-index val xs)))
 	  (if inner (1+ inner) nil)))))
 
-;; TODO: It should be possible to do something like 
-;; (type 'function f)
 (match:defmatch m-map
-  (f nil nil)
-  (f (cons x xs) (cons (funcall f x) (m-map f xs))))
+  "Given a function and a list, maps over the list and applies the
+  function to each element of the list and puts the results into a new
+  list."
+  ((bind f '(type 'function)) nil 
+   nil)
+  ((bind f '(type 'function)) (cons x xs) 
+   (cons (funcall f x) (m-map f xs))))
 
 
 (defun test-list ()

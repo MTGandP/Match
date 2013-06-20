@@ -69,9 +69,9 @@ Using the `defmatch` macro, we can simplify this further:
       (0 1)
       (n (* n (factorial (1- n)))))
 
-Note: `match` implicitly initializes any variables that may be used in
-each form. If you do not use these variables, you may get a style
-warning to that effect. You may wish to suppress style warnings.
+Note: `match` sometimes automatically initializes variables that may
+be used in each form. If you do not use these variables, you may get a
+style warning to that effect.
 
 Feedback
 --------

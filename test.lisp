@@ -84,14 +84,12 @@
     (equal (match 'world ((type 'number) 'num) ((type 'symbol) 'sym) (t 'no))
 	   'sym)
 
-    ;; "Test user-defined quote pattern"
-    ;; ;; TODO: Get these to work. QUOTE is causing problems because it
-    ;; ;; thinks QUOTE is a pattern, not an actual quote.
+    "Test user-defined quote pattern"
     (equal (let ((expr 'thing)) (match expr ('thing 'yes)))
 	   'yes)
     (equal (match 'world ("world" 'wrong-str) 
-		  ('other 'wrong-sym)
-    		  ('world 'right))
+	     ('other 'wrong-sym)
+	     ('world 'right))
     	   'right)
     (equal (match '(+ x 3) 
 	     ('x 'wrong-structure) 
@@ -109,7 +107,10 @@
     "Test user-defined list pattern"
     (equal (match (list 1) ((list x) x))
 	   1)
-    (equal (match (list 1 2 3) ((list x y z) (+ x y z)))
+    (equal (match (list 1 2 3)
+	     ((list x y) 'wrong)
+	     ((list w x y z) 'wrong)
+	     ((list x y z) (+ x y z)))
 	   6)
     (equal (match nil ((list) t) (t nil))
 	   t)
