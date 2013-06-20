@@ -31,29 +31,29 @@ to greatly simplify code that would otherwise be complicated.
 Consider a simple example: the recursive implementation of the
 factorial function that we all know and love: 
 
-`(defun factorial (n)
-  (if (= n 0)
-      1
-      (* n (factorial (1- n)))))`
+    (defun factorial (n)
+      (if (= n 0)
+          1
+          (* n (factorial (1- n)))))
 
 In Haskell, we might implement `factorial` using pattern matching: 
 
-`factorial :: Int -> Int
-factorial 0 = 1
-factorial n = n * (factorial (n - 1))`
+    factorial :: Int -> Int
+    factorial 0 = 1
+    factorial n = n * (factorial (n - 1))
 
 The Match library allows us to do something similar using Lisp.
 
-`(defun factorial (x)
-  (match x
-    (0 1)
-    (n (* n (factorial (1- n))))))`
+    (defun factorial (x)
+      (match x
+        (0 1)
+        (n (* n (factorial (1- n))))))
 
 Using the `defmatch` macro, we can simplify this further: 
 
-`(match factorial
-  (0 1)
-  (n (* n (factorial (1- n)))))`
+    (defmatch factorial
+      (0 1)
+      (n (* n (factorial (1- n)))))
 
 
 Feedback
