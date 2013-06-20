@@ -1,5 +1,7 @@
-Match: A lightweight, extensible pattern matching library for Common Lisp
-=========================================================================
+Match
+=====
+A lightweight, extensible pattern matching library for Common Lisp
+------------------------------------------------------------------
 
 Created by Michael Dickens.
 
