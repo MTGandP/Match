@@ -15,6 +15,19 @@
 ;; Do not print style-warning errors.
 (declaim #+sbcl(sb-ext:muffle-conditions style-warning))
 
+;;; example defpattern for something more complicated and esoteric.
+;;; Determines whether a non-empty list contains only even numbers.
+(defpattern all-even (first &rest arglist)
+  (expr)
+    (and (listp expr)
+	 (= (1+ (length arglist)) (length expr))
+	 (>= (length expr) 1)
+	 (reduce (lambda (pred x) (and pred (evenp x))) 
+		 expr :initial-value t))
+    (first (/ (car expr) 2))
+    ;; TODO: try dividing each element by 2
+    (arglist num (/ (nth num (cdr expr)) 2)))
+
 
 ;;; Functions demonstrating pattern matching.
 (defmatch factorial
@@ -63,13 +76,12 @@
 	     (match expr (expr 'yes)))
 	   'yes)
 
-    ;; TODO: We should be able to use (type 'number).
     "Test user-defined type pattern"
-    (equal (match 3 ((type number) 'yes) (t 'no))
+    (equal (match 3 ((type 'number) 'yes) (t 'no))
 	   'yes)
-    (equal (match "hello" ((type number) 'yes) (t 'no))
+    (equal (match "hello" ((type 'number) 'yes) (t 'no))
 	   'no)
-    (equal (match 'world ((type number) 'num) ((type symbol) 'sym) (t 'no))
+    (equal (match 'world ((type 'number) 'num) ((type 'symbol) 'sym) (t 'no))
 	   'sym)
 
     ;; "Test user-defined quote pattern"
@@ -101,6 +113,10 @@
 	   6)
     (equal (match nil ((list) t) (t nil))
 	   t)
+
+    "Test user-defined bind pattern"
+    (equal (match 4 ((bind x '(type 'number)) x) (t 'no))
+	   4)
 
     "Test user-defined all-even pattern"
     (equal (match (list 2 4 6) ((all-even x y z) (list x y z)))

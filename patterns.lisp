@@ -6,9 +6,12 @@
 ;;;; Default patterns for use with the pattern matching library.
 ;;;; 
 
-
 ;; Do not print style-warning errors.
 (declaim #+sbcl(sb-ext:muffle-conditions style-warning))
+
+
+;; TODO: Add better documentation for these patterns.
+
 
 
 (match:defpattern list (&rest arglist) 
@@ -37,7 +40,9 @@
 ;; (type 'number) does not bind any args.
 (match:defpattern type (type-sym) 
   (expr)
-    (typep expr type-sym))
+    (and (consp type-sym)
+	 (equal (car type-sym) 'quote)
+	 (typep expr (cadr type-sym))))
 
 ;;; example defpattern for a cons cell
 (match:defpattern cons (x xs) 
@@ -46,20 +51,12 @@
     (x (car expr))
     (xs (cdr expr)))
      
-;;; example defpattern for something more complicated and esoteric.
-;;; Determines whether a non-empty list contains only even numbers.
-(match:defpattern all-even (first &rest arglist)
+;;; used to bind a variable when using a form that does not have binding
+(match:defpattern bind (var pred)
   (expr)
-    (and (listp expr)
-	 (= (1+ (length arglist)) (length expr))
-	 (>= (length expr) 1)
-	 (reduce (lambda (pred x) (and pred (evenp x))) 
-		 expr :initial-value t))
-    (first (/ (car expr) 2))
-    ;; TODO: try dividing each element by 2
-    (arglist num (/ (nth num (cdr expr)) 2)))
-
-
+    ;; pred is a quoted predicate, so remove the quote
+    (matchp expr (cadr pred))
+    (var expr))
 
 ;; Resume printing style-warning errors.
 (declaim #+sbcl(sb-ext:unmuffle-conditions style-warning))

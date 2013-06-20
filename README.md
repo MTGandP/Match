@@ -5,10 +5,22 @@ A lightweight, extensible pattern matching library for Common Lisp
 
 Created by Michael Dickens.
 
-See the .lisp files for full documentation of individual functions.
+See the .lisp files for full documentation of individual macros and
+functions.
 
-Using Match
------------
+Installation
+------------
+
+To install Match, simply clone the repository and begin using the
+library. Load Match by putting `(load "path/to/match.lisp")` in your
+Lisp file.
+
+All of the macros and functions in `match.lisp` are defined in the
+package `:match`. If you want to use them without adding the `match:`
+prefix, you must `import` them.
+
+Features
+---------
 
 ### Match Predicate `matchp`
 
@@ -57,6 +69,9 @@ Using the `defmatch` macro, we can simplify this further:
       (0 1)
       (n (* n (factorial (1- n)))))
 
+Note: `match` implicitly initializes any variables that may be used in
+each form. If you do not use these variables, you may get a style
+warning to that effect. You may wish to suppress style warnings.
 
 Feedback
 --------

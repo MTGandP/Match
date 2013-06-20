@@ -119,11 +119,20 @@ basic built-in patterns and NOT user-defined patterns."
     (t (basic-match-p expr form))))
 
 (defun arglist-count-args (args)
-  "Counts the number of parameters in the given argument specification."
+  "Counts the number of parameters in the given argument
+specification, not including a &rest argument."
   (cond
     ((null args) 0)
     ((equal '&rest (car args)) 0)
     (t (1+ (arglist-count-args (cdr args))))))
+
+(defun arglist-simplify (args)
+  "Removes all argument specifiers (symbols with '&') from args."
+  (cond
+    ((null args) nil)
+    ((equal #\& (char (string (car args)) 0)) 
+     (arglist-simplify (cdr args)))
+    (t (cons (car args) (arglist-simplify (cdr args))))))
 
 (defun arglist-pos (val args)
   "Returns the position of val in args. If val is a &rest argument,
@@ -243,7 +252,7 @@ value in expr. If it does not understand the format of form, it
 returns nil. Notice that this behavior is useful for some cases, but
 it means that the function will quietly ignore invalid input."
   (cond
-    ((and (consp expr) (consp form))
+    ((consp form)
      (let ((pattern (get-pattern (car form)))
 	   (num (car path)))
        (when (not pattern)
@@ -263,10 +272,12 @@ it means that the function will quietly ignore invalid input."
 (defmacro add-scope (expr form to-eval)
   "Puts the variables in form into scope and binds them to the
   corresponding values in expr. Then evaluates to-eval."
-  (let ((var-list (bind-vars expr form)))
+  (let* ((expr-sym (gensym))
+	 (var-list (bind-vars expr-sym form)))
     (if var-list
-	`(let ,var-list
-	   ,to-eval)
+	`(let ((,expr-sym ,expr))
+	  (let ,var-list
+	   ,to-eval))
 	to-eval)))
 
 
@@ -315,7 +326,20 @@ If predk contained any symbols other than function
 ;; TODO: allow doc strings
 (defmacro defmatch (name &body body)
   "A facility for defining functions that use pattern matching on the
-arguments, similarly to Haskell or other functional languages."
+arguments, similarly to Haskell or other functional languages. It
+uses the following format: 
+
+    (defmatch name
+      \"optional doc-string\"
+      forms*)
+
+It takes forms similar to (match), with one key difference. A defmatch
+  form may have more than two parts. The last part is the expression,
+  and all other parts are matched against the arguments. So whereas in
+  a match form you may match two values by bundling them in a list and
+  then using the form ((list x y) (do-something x y)), with defmatch
+  you can simply pass the two values as arguments and then use the
+  form (x y (do-something x y))."
   (let ((arg-sym (gensym))
 	(doc-string ""))
     (when (typep (car body) 'string)

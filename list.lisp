@@ -3,7 +3,9 @@
 ;;;; ---------
 ;;;; Created by Michael Dickens on 2013-06-19.
 ;;;; 
-;;;; Uses match to implement some basic list functions.
+;;;; Uses match to implement some basic list functions. The functions
+;;;; in this file are written simply and documented to help explain
+;;;; the Match library by example.
 ;;;; 
 
 (load "match")
@@ -16,13 +18,43 @@
 
 (match:defmatch m-head
   "Performs the same function as #'car."
+  ;; Given nil, return nil.
   (nil nil)
+
+  ;; Given a cons cell, return the car of the cell.
   ((cons x xs) x))
 
 (match:defmatch m-tail
   "Performs the same function as #'cdr."
+  ;; Given nil, return nil.
   (nil nil)
+
+  ;; Given a cons cell, return the cdr of the cell.
   ((cons x xs) xs))
+
+(match:defmatch m-drop
+  "Drops the last n elements of the list and returns a list containing
+  only the remaining elements."
+  ;; Given any number and an empty list, return nil.
+  (n nil nil)
+
+  ;; Given 0 and any list, return the list.
+  (0 xs xs)
+
+  ;; Given a number and a cons cell, recurse on the cdr of the cell.
+  (n (cons x xs) (m-drop (1- n) xs)))
+
+(match:defmatch m-take
+  "Returns a list containing only the first n elements of the input 
+list."
+  ;; Given any number and an empty list, return nil.
+  (n nil nil)
+
+  ;; Given 0 and any list, return nil.
+  (0 xs nil)
+
+  ;; Given a number and a cons cell, recurse on the cdr of the cell.
+  (n (cons x xs) (cons x (m-take (1- n) xs))))
 
 (match:defmatch m-length
   (nil 0)
@@ -40,20 +72,6 @@ found, returns nil."
 	0
 	(let ((inner (m-index val xs)))
 	  (if inner (1+ inner) nil)))))
-
-(match:defmatch m-drop
-  "Drops the last n elements of the list and returns a list containing
-  only the remaining elements."
-  (n nil nil)
-  (0 xs xs)
-  (n (cons x xs) (m-drop (1- n) xs)))
-
-(match:defmatch m-take
-  "Returns a list containing only the first n elements of the input 
-list."
-  (n nil nil)
-  (0 xs nil)
-  (n (cons x xs) (cons x (m-take (1- n) xs))))
 
 ;; TODO: It should be possible to do something like 
 ;; (type 'function f)
