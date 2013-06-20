@@ -144,19 +144,19 @@ exist in the same namespace as functions.
 
 name: The name of the pattern. A list may match the pattern if it
   begins with this symbol.
-args: An argument specificer much like that for functions. When a
-pattern is matched against, think of it as calling a function defined
-by defpattern that takes in as arguments each value passed with the
-pattern. The argument specifier may use &rest.
+args: An argument specificer much like that for functions. When a 
+  pattern is matched against, think of it as calling a function defined
+  by defpattern that takes in as arguments each value passed with the
+  pattern. The argument specifier may use &rest.
 special-args: An argument specifier containing exactly one argument,
   which binds to the expression. By convention, this is given as
   (expr).
 pred: The body for a predicate function that uses the values passed
-in to args and special-args to determine whether the expression
-matches the pattern.
-binds: A list of forms where each form specifies how to bind a
-variable. A single form contains two elements: first the name of the
-argument, and second an expression that uses the  passed in to
+  in to args and special-args to determine whether the expression
+  matches the pattern.
+binds: A list of forms where each form specifies how to bind a 
+  variable. A single form contains two elements: first the name of the
+  argument, and second an expression that uses the  passed in to 
   args and special-args to return the value of the given variable. 
   a &rest argument, it contains three forms: the first is the same as
   above; the second is a variable name which binds to the number of
@@ -304,7 +304,8 @@ it means that the function will quietly ignore invalid input."
       ...)
 Runs through the list of predicates. As soon as it finds some predk
   such that (matchp val predk) returns t, it stops, evaluates bodyk,
-  and returns. If predk contained any symbols other than function
+  and returns. If it finds to matching patterns, it returns nil.
+If predk contained any symbols other than function
   calls, it adds these variables to the local scope, binding them to
   the value in val that they matched. If you wish to use a generic
   placeholder symbol without binding it to a variable, use T."
@@ -315,8 +316,13 @@ Runs through the list of predicates. As soon as it finds some predk
 (defmacro defmatch (name &body body)
   "A facility for defining functions that use pattern matching on the
 arguments, similarly to Haskell or other functional languages."
-  (let ((arg-sym (gensym)))
+  (let ((arg-sym (gensym))
+	(doc-string ""))
+    (when (typep (car body) 'string)
+      (setf doc-string (car body))
+      (setf body (cdr body)))
     `(defun ,name (&rest ,arg-sym)
+       ,doc-string
        (match ,arg-sym
 	      ,@(mapcar (lambda (x) 
 			 `((list ,@(butlast x)) ,@(last x)))

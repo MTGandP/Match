@@ -9,28 +9,31 @@
 (load "match")
 (load "unit")
 
-(in-package :match)
-
 
 ;; Do not print style-warning errors.
 (declaim #+sbcl(sb-ext:muffle-conditions style-warning))
 
 
-(defmatch m-head
+(match:defmatch m-head
+  "Performs the same function as #'car."
   (nil nil)
   ((cons x xs) x))
 
-(defmatch m-tail
+(match:defmatch m-tail
+  "Performs the same function as #'cdr."
   (nil nil)
   ((cons x xs) xs))
 
-(defmatch m-length
+(match:defmatch m-length
   (nil 0)
   ((cons x xs) (1+ (m-length xs))))
 
 ;; TODO: This seems overly complicated. There must be a way to
 ;; simplify it. 
-(defmatch m-index
+(match:defmatch m-index
+  "Where the first argument is a value and the second is a list, finds
+the index of the first argument in the second argument. If it is not
+found, returns nil."
   (val nil nil)
   (val (cons x xs)
     (if (equal x val)
@@ -38,19 +41,23 @@
 	(let ((inner (m-index val xs)))
 	  (if inner (1+ inner) nil)))))
 
-(defmatch m-drop
+(match:defmatch m-drop
+  "Drops the last n elements of the list and returns a list containing
+  only the remaining elements."
   (n nil nil)
   (0 xs xs)
   (n (cons x xs) (m-drop (1- n) xs)))
 
-(defmatch m-take
+(match:defmatch m-take
+  "Returns a list containing only the first n elements of the input 
+list."
   (n nil nil)
   (0 xs nil)
   (n (cons x xs) (cons x (m-take (1- n) xs))))
 
 ;; TODO: It should be possible to do something like 
 ;; (type 'function f)
-(defmatch m-map
+(match:defmatch m-map
   (f nil nil)
   (f (cons x xs) (cons (funcall f x) (m-map f xs))))
 
@@ -135,7 +142,6 @@
 	   '(2 4 6 8))
 
     ))
-
 
 
 ;; Resume printing style-warning errors.
