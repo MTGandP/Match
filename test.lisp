@@ -25,7 +25,6 @@
 	 (reduce (lambda (pred x) (and pred (evenp x))) 
 		 expr :initial-value t))
     (first (/ (car expr) 2))
-    ;; TODO: try dividing each element by 2
     (arglist num (/ (nth num (cdr expr)) 2)))
 
 
@@ -51,8 +50,6 @@
     unit:verbose-off
     
     "Test proper compile-time error handling"
-    ;; TODO: this doesn't work properly because when it evaluates,
-    ;; it's not in the match package
     (equal
      (handler-case 
     	 (eval '(progn

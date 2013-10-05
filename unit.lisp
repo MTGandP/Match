@@ -16,7 +16,7 @@
 (in-package :unit)
 
 (defmacro report-test (test form expected report-success-p)
-  "Calls form and expected on test. Prints a message and returns the
+  "Call FORM and EXPECTED on TEST. Print a message and returns the
   result of the call.
 
 test: A predicate function taking two arguments, typically an equality
@@ -39,7 +39,7 @@ nil, only prints a message upon failure.
 		 eval-found eval-expected))))
 
 (defmacro check (&body forms)
-  "Checks a list of forms.
+  "Check a list of forms.
 
 forms: A list of forms where each individual form contains three
   elements in order: a test function, not quoted (e.g. eql); a form to
@@ -49,10 +49,10 @@ return: t if all tests pass, nil if any tests fail.
 
 When verbose printing is on, this will print every test. When verbose
 printing is off, it will only print failures. Verbose printing is on
-by default; it may be turned on by writing \"verbose-on\" (without the
-quotes) where a form would go, and similarly may be turned off with
-\"verbose-off\". If you are using unit as a separate package, you must
-use unit:verbose-on or unit:verbose-off.
+by default; it may be turned on by writing VERBOSE-ON where a form
+would go, and similarly may be turned off with VERBOSE-OFF. If you are
+using unit as a separate package, you must use UNIT:VERBOSE-ON or
+UNIT:VERBOSE-OFF.
 
 Comments may also be used: simply put a string where a form would go,
 and this will print the string at the same time as it would evaluate

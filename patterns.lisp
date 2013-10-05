@@ -12,7 +12,7 @@
 
 (match:defpattern list (&rest arglist) 
   (expr)
-  "Matches a list with as many arguments as arglist has.
+  "Match a list with as many arguments as ARGLIST has.
 
 Example
   (matchp '(1 2 3) (list x y z)) ; t
@@ -26,11 +26,11 @@ Example
 
 (match:defpattern quote (arg)
   (expr)
-  "Matches a quoted s-expression. Remember that Lisp automatically
+  "Match a quoted s-expression. Remember that Lisp automatically
   expands 'x into (quote x), so you may write 'x in a form and it will
   expand into the pattern (quote x).
 
-Although (quote) is defined externally, it is special because a quote
+Although QUOTE is defined externally, it is special because a quote
   inside a pattern does not treat anything inside the quote as a
   pattern, so it terminates pattern nesting. This behavior is useful
   for matching quoted symbols or lists.
@@ -45,7 +45,7 @@ Example
 
 (match:defpattern type (type-sym) 
   (expr)
-  "Matches the type of an expression.
+  "Match the type of an expression.
 
 type-sym: A quoted symbol giving the type to match against.
 
@@ -59,7 +59,7 @@ Example
 
 (match:defpattern cons (x xs) 
   (expr)
-  "Matches a cons cell.
+  "Match a cons cell.
 
 x: The car of the cons cell.
 xs: The cdr of the cons cell.

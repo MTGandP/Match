@@ -17,7 +17,7 @@
 
 
 (match:defmatch m-head
-  "Performs the same function as #'car."
+  "Perform the same function as #'car."
   ;; Given nil, return nil.
   (nil nil)
 
@@ -25,7 +25,7 @@
   ((cons x xs) x))
 
 (match:defmatch m-tail
-  "Performs the same function as #'cdr."
+  "Perform the same function as #'cdr."
   ;; Given nil, return nil.
   (nil nil)
 
@@ -33,7 +33,7 @@
   ((cons x xs) xs))
 
 (match:defmatch m-drop
-  "Drops the last n elements of the list and returns a list containing
+  "Drop the last n elements of the list and returns a list containing
   only the remaining elements."
   ;; Given any number and an empty list, return nil.
   (n nil nil)
@@ -45,7 +45,7 @@
   (n (cons x xs) (m-drop (1- n) xs)))
 
 (match:defmatch m-take
-  "Returns a list containing only the first n elements of the input 
+  "Return a list containing only the first n elements of the input 
 list."
   ;; Given any number and an empty list, return nil.
   (n nil nil)
@@ -57,28 +57,40 @@ list."
   (n (cons x xs) (cons x (m-take (1- n) xs))))
 
 (match:defmatch m-length
+  "Find the length of a list."
+  ;; nil has length 0.
   (nil 0)
+
+  ;; For a cons cell, define its length recursively in terms of its cdr.
   ((cons x xs) (1+ (m-length xs))))
 
 ;; TODO: This seems unnecessarily complicated. There must be a way to
 ;; simplify it.
 (match:defmatch m-index
-  "Where the first argument is a value and the second is a list, finds
+  "Where the first argument is a value and the second is a list, find
 the index of the first argument in the second argument. If it is not
-found, returns nil."
+found, return nil."
+  ;; An empty list contains nothing.
   (val nil nil)
+
   (val (cons x xs)
     (if (equal x val)
-	0
-	(let ((inner (m-index val xs)))
-	  (if inner (1+ inner) nil)))))
+        ;; If val is found at the beginning of this list, its index is 0.
+        0
+
+      ;; Otherwise, find the index of val in the cdr and add 1.
+      (let ((inner (m-index val xs)))
+        (if inner (1+ inner) nil)))))
 
 (match:defmatch m-map
-  "Given a function and a list, maps over the list and applies the
-  function to each element of the list and puts the results into a new
-  list."
+  "Given a function and a list, map over the list and apply the
+  function to each element of the list."
+  ;; Given a function f and nil, simply return nil.
   ((bind f '(type 'function)) nil 
    nil)
+
+  ;; Given a function and a cons cell, apply the function to the car
+  ;; and recursively call m-map on the cdr.
   ((bind f '(type 'function)) (cons x xs) 
    (cons (funcall f x) (m-map f xs))))
 

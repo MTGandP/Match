@@ -62,21 +62,21 @@
 
 (let ((patterns (make-hash-table)))
   (defun patternp (name)
-    "Determines if the given symbol defines a pattern."
+    "Determine if the given symbol defines a pattern."
     (gethash name patterns))
 
   (defun get-pattern (name)
-    "Returns the pattern with the given name."
+    "Return the pattern with the given name."
     (gethash name patterns))
 
   (defun set-pattern (name value)
-    "Sets the pattern with the given name to the given value. If the
-    name is not bound, creates a new pattern with the given name and
-    binds it to the given value."
+    "Set the pattern with the given name to the given value. If the
+    name is not bound, create a new pattern with the given name and
+    bind it to the given value."
     (setf (gethash name patterns) value)))
 
 (defun basic-matchp (expr form)
-  "Determines if the expression matches the form. Only uses certain
+  "Determine if the expression matches the form. Only uses certain
 basic built-in patterns and NOT user-defined patterns."
   (cond
     ;; T matches everything.
@@ -95,7 +95,7 @@ basic built-in patterns and NOT user-defined patterns."
     (t (equal expr form))))
 
 (defun quoted-matchp (expr form)
-  "Determines whether the expression matches the form. The form must
+  "Determine whether the expression matches the form. The form must
 be quoted.
 
 Example
@@ -123,7 +123,7 @@ Example
     (t (basic-matchp expr form))))
 
 (defmacro matchp (expr form)
-  "Determines if the expression matches the form.
+  "Determine if the expression matches the form.
 
 Example
   (matchp 3 (type 'number))"
@@ -138,7 +138,7 @@ specification, not including a &rest argument."
     (t (1+ (arglist-count-args (cdr args))))))
 
 (defun arglist-simplify (args)
-  "Removes all argument specifiers (symbols with '&') from args."
+  "Remove all argument specifiers (symbols with '&') from args."
   (cond
     ((null args) nil)
     ((equal #\& (char (string (car args)) 0)) 
@@ -146,8 +146,8 @@ specification, not including a &rest argument."
     (t (cons (car args) (arglist-simplify (cdr args))))))
 
 (defun arglist-pos (val args)
-  "Returns the position of val in args. If val is a &rest argument,
-  returns a cons cell where the car is the argument position (not the
+  "Return the position of val in args. If val is a &rest argument,
+  return a cons cell where the car is the argument position (not the
   list position) and the cdr is a &rest symbol."
   (let ((rest-pos (position '&rest args))
 	(pos (position val args)))
@@ -157,8 +157,8 @@ specification, not including a &rest argument."
 
 (defmacro defpattern (name args special-args 
 		      &optional doc-string pred &rest binds)
-  "Defines a new pattern that can be used by matchp. Patterns do not
-exist in the same namespace as functions.
+  "Define a new pattern that can be used by matchp. Patterns exist
+  in a separate namespace from functions.
 
 name: The name of the pattern. A list may match the pattern if it
   begins with this symbol.
@@ -236,7 +236,7 @@ binds: A list of forms where each form specifies how to bind a
 
 
 (defun var-used-p (var to-eval)
-  "Determines if the given variable is used in the expression. This
+  "Determine if the given variable is used in the expression. This
   isn't perfect; if you do something like 
     (var-used-p 'x '(quote x))
   or 
@@ -253,7 +253,7 @@ binds: A list of forms where each form specifies how to bind a
 ;; expression to see if a variable is ever referenced; if not, don't
 ;; define it.
 (defun bind-vars (expr-sym to-eval form)
-  "Treats symbols in form as variables. Creates a list of variables
+  "Treat symbols in FORM as variables. Create a list of variables
 in form where each element is a list containing first the variable,
 then the expression in expr to which the variable is bound."
   (labels 
@@ -277,9 +277,9 @@ then the expression in expr to which the variable is bound."
 	    
 
 (defun get-var-value (expr form path)
-  "Finds the (num)th variable in form and returns its corresponding
-value in expr. If it does not understand the format of form, it
-returns nil. Notice that this behavior is useful for some cases, but
+  "Find the (num)th variable in FORM and return its corresponding
+value in expr. If it does not understand the format of FORM, 
+return nil. Notice that this behavior is useful for some cases, but
 it means that the function will quietly ignore invalid input."
   (cond
     ((consp form)
@@ -300,8 +300,8 @@ it means that the function will quietly ignore invalid input."
 
 
 (defmacro add-scope (expr form to-eval)
-  "Puts the variables in form into scope and binds them to the
-  corresponding values in expr. Then evaluates to-eval."
+  "Put the variables in form into scope and bind them to the
+  corresponding values in expr. Then evaluate to-eval."
   (let* ((expr-sym (gensym))
 	 (var-list (bind-vars expr-sym to-eval form)))
     (if var-list
@@ -325,16 +325,15 @@ it means that the function will quietly ignore invalid input."
       (pred1 body1)
       (pred2 body2)
       ...)
-Runs through the list of predicates. As soon as it finds some predk
-  such that (matchp val predk) returns t, it stops, evaluates bodyk,
-  and returns. If it finds to matching patterns, it returns nil.
+Run through the list of predicates. As soon as some predk is found
+  such that (matchp val predk) returns t, stop, evaluate bodyk,
+  and return. If no matching pattern is found, return nil.
 If predk contained any symbols other than function
-  calls, it adds these variables to the local scope, binding them to
+  calls, add these variables to the local scope, binding them to
   the value in val that they matched. If you wish to use a generic
   placeholder symbol without binding it to a variable, use T."
   `(cond ,@(expand val body)))
 
-;; TODO: allow doc strings
 (defmacro defmatch (name &body body)
   "A facility for defining functions that use pattern matching on the
 arguments, similarly to Haskell or other functional languages. It
