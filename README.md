@@ -25,7 +25,7 @@ Features
 ### Match Predicate `matchp`
 
 Use `matchp` to determine whether an expression matches a form. If you
-write new patterns using `defpattern`, `matchp` automatically knows
+write new patterns using `defpattern`, `matchp` will automatically know
 how to use these patterns.
 
 `matchp` implements the core functionality of Match, but it isn't very
@@ -36,13 +36,13 @@ useful by itself. The real benefits come from `match`.
 `match` provides a structure similar to `cond` or `case`: given an
 expression and a series of forms, it attempts to match the expression
 against each form. If it finds a match, it executes a given
-expression. On the surface, it looks very similar to `case`. But the
+expression. It looks very similar to `case` on the surface, but the
 functionality of `match` goes beyond `case` in that it allows binding
 new variables: a variable used in a match form is bound to the
 corresponding value in the expression. This functionality may be used
-to greatly simplify code that would otherwise be complicated.
+to greatly simplify code.
 
-Consider a simple example: the recursive implementation of the
+Consider a simple example -- the recursive implementation of the
 factorial function that we all know and love: 
 
     (defun factorial (n)
@@ -63,7 +63,7 @@ The Match library allows us to do something similar using Lisp.
         (0 1)
         (n (* n (factorial (1- n))))))
 
-Using the `defmatch` macro, we can simplify this further: 
+Using the special `defmatch` macro, we can simplify this further: 
 
     (defmatch factorial
       (0 1)
