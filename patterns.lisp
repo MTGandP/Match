@@ -37,8 +37,9 @@ Although QUOTE is defined externally, it is special because a quote
 
 Example
   (match '(+ x 3) 
-    ('x 'wrong) 
-    ('(+ x 3) 'right))
+    ('x 'no)
+    ((+ x 3) 'no)
+    ('(+ x 3) 'yes))
 "
     (equal arg expr)
     (arg expr))

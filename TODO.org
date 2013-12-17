@@ -1,0 +1,3 @@
+* Bugs :coding:
+** If you load match.lisp from outside the match directory, match.lisp fails to load patterns.lisp.
+*** Use ASDF package manager to fix this.

@@ -79,4 +79,4 @@ Feedback
 I would love to hear any comments you may have about Match. I'm also
 interested to hear if you add any functionality or write interesting
 new patterns. Leave a comment on the project's GitHub page:
-https://github.com/MTGandP/Match
+https://github.com/michaeldickens/Match

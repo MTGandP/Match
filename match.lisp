@@ -130,7 +130,7 @@ Example
   `(quoted-matchp ,expr ',form))
 
 (defun arglist-count-args (args)
-  "Counts the number of parameters in the given argument
+  "Count the number of parameters in the given argument
 specification, not including a &rest argument."
   (cond
     ((null args) 0)
